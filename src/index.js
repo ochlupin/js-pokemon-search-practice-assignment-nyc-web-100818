@@ -13,22 +13,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const filteredPokemon = allPokemonData.filter(function (pokemonObject) {
       return pokemonObject.name.includes(userSearchTerm)
     })
-    const pokeHTML = filteredPokemon.map(function (pokemonObject) {
-      return `
-      <div class="pokemon-container">
-      <div style="width:230px;margin:10px;background:#fecd2f;color:#2d72fc" class="pokemon-frame">
-        <h1 class="center-text">${pokemonObject.name}</h1>
-        <div style="width:239px;margin:auto">
-          <div style="width:96px;margin:auto">
-            <img data-id="${pokemonObject.id}" data-action="flip" class="toggle-sprite" src="${pokemonObject.sprites.front}">
-          </div>
-        </div>
-      </div>
-    </div>
-      `
-    }).join('')
-    containerForAppendingPokemonCards.innerHTML = pokeHTML
+    const pokeHTML = renderAllPokemon(filteredPokemon)
+    containerForAppendingPokemonCards.innerHTML = pokeHTML;
   })
+
+  containerForAppendingPokemonCards.addEventListener('click', function (event) {
+    // if (event.target.nodeName === 'IMG') {
+    //   console.log('i was clicked mon', event.target);
+    // }
+
+    if (event.target.dataset.action === 'flip') {
+      const clickedPokemon = allPokemonData.find(function (pokemonObject) {
+        //event.target is the img that was clicked
+        //event.target.dataset -> {action:`flip`, id:`3`}
+        return pokemonObject.id === parseInt(event.target.dataset.id);
+        // or use loose equality return pokemonObject.id == 
+      })
+      if (event.target.src === clickedPokemon.sprites.front) {
+        event.target.src = clickedPokemon.sprites.back;
+      } else {
+        event.target.src = clickedPokemon.sprites.front;
+      }
+    }
+  });
 
 
   fetch('http://localhost:3000/pokemon', {
@@ -40,22 +47,26 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .then(function (parsedPokeJSON) {
       // store all the pokemon data in a JS array so we can interact with it AFTER the initial `fetch`
-      allPokemonData = parsedPokeJSON
-      console.table(parsedPokeJSON)
-      // once we have the poke data let's try to get SOMETHING on the page
-      parsedPokeJSON.forEach(function (pokemonObject) {
-        containerForAppendingPokemonCards.innerHTML += `
-        <div class="pokemon-container">
-        <div style="width:230px;margin:10px;background:#fecd2f;color:#2d72fc" class="pokemon-frame">
-          <h1 class="center-text">${pokemonObject.name}</h1>
-          <div style="width:239px;margin:auto">
-            <div style="width:96px;margin:auto">
-              <img data-id="${pokemonObject.id}" data-action="flip" class="toggle-sprite" src="${pokemonObject.sprites.front}">
-            </div>
+      allPokemonData = parsedPokeJSON;
+      console.table(parsedPokeJSON);
+      // producing a string of HTML cards for all the data in our database, adding that to the DOM
+      containerForAppendingPokemonCards.innerHTML = renderAllPokemon(parsedPokeJSON);
+    })
+}) // end of DOM content load
+
+function renderAllPokemon(pokeCollection) {
+  return pokeCollection.map(function (pokemonObject) {
+    return `
+      <div class="pokemon-container">
+      <div style="width:230px;margin:10px;background:#fecd2f;color:#2d72fc" class="pokemon-frame">
+        <h1 class="center-text">${pokemonObject.name}</h1>
+        <div style="width:239px;margin:auto">
+          <div style="width:96px;margin:auto">
+            <img data-id="${pokemonObject.id}" data-action="flip" class="toggle-sprite" src="${pokemonObject.sprites.front}">
           </div>
         </div>
       </div>
-        `
-      })
-    })
-})
+    </div>
+      `
+  }).join('')
+}
